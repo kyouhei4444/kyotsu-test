@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#eef0f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121418" media="(prefers-color-scheme: dark)">
+<style>:root{color-scheme:light}body{margin:0}[hidden]{display:none!important}</style>
+<title>共通テスト 一問一答</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="共テ一問一答">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: 1カラムのスマホ画面。ホーム/問題一覧を下タブで切替、学習は全画面のカード */
+:root{
+  --bg:#eef0f3; --surface:#fbfcfd; --ink:#1b2029; --muted:#5c6573; --line:#d5dae2;
+  --acc:#24467e; --acc-soft:#dfe6f2; --on-acc:#ffffff;
+  --ok:#2d7547; --ok-soft:#dcebdf; --ng:#b3402e; --ng-soft:#f5e0da;
+  --f:"Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121418; --surface:#1b1f26; --ink:#e6e9ee; --muted:#9aa3b0; --line:#2e343e;
+  --acc:#9db8e8; --acc-soft:#232e42; --on-acc:#111826;
+  --ok:#72c491; --ok-soft:#1e3326; --ng:#ee8d7b; --ng-soft:#3e2420;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#121418; --surface:#1b1f26; --ink:#e6e9ee; --muted:#9aa3b0; --line:#2e343e;
+  --acc:#9db8e8; --acc-soft:#232e42; --on-acc:#111826;
+  --ok:#72c491; --ok-soft:#1e3326; --ng:#ee8d7b; --ng-soft:#3e2420;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.6;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.app{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:20px calc(88px + env(safe-area-inset-bottom,0px))}
+.view{display:flex;flex-direction:column;gap:22px}
+.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:500}
+h1{font-size:26px;line-height:1.25;margin:2px 0 0;font-weight:700}
+h2{font-size:13px;letter-spacing:.06em;color:var(--muted);margin:0 0 10px;font-weight:700}
+.num{font-variant-numeric:tabular-nums}
+
+.summary{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px}
+.sumrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.big{font-size:40px;line-height:1;font-weight:700}
+.big small{font-size:16px;color:var(--muted);font-weight:400}
+.meta{display:flex;gap:16px;font-size:13px;color:var(--muted)}
+.meta b{color:var(--ink);font-size:16px}
+.bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.bar .l{background:var(--acc)} .bar .s{background:var(--acc-soft)} .bar .w{background:var(--ng)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field>.lab{font-size:12.5px;color:var(--muted);font-weight:500;display:flex;justify-content:space-between;gap:8px}
+.lab button{border:0;background:none;color:var(--acc);font-size:12.5px;padding:0}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:99px;padding:6px 12px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:500}
+.chip.grp{border-style:dashed}
+.scopecount{font-size:13px;color:var(--muted)}
+.scopecount b{color:var(--ink)}
+.note{font-size:12px;color:var(--muted);margin:0}
+
+.modes{display:flex;flex-direction:column;gap:10px}
+.mode{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:14px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.mode:active{transform:scale(.99)}
+.mode:disabled{opacity:.5}
+.mode .ic{width:44px;height:44px;border-radius:12px;background:var(--acc-soft);color:var(--acc);display:grid;place-items:center;font-size:18px;font-weight:700}
+.mode b{display:block;font-size:16px}
+.mode span{font-size:12.5px;color:var(--muted)}
+.mode .go{color:var(--acc);font-size:20px}
+
+.subrows{display:flex;flex-direction:column;gap:12px}
+.subrow{display:grid;grid-template-columns:5.2em 1fr 4.6em;gap:10px;align-items:center;font-size:13px}
+.subrow .num{text-align:right;color:var(--muted)}
+.danger{border:1px solid var(--line);background:transparent;border-radius:10px;padding:8px 12px;font-size:13px;color:var(--muted);align-self:flex-start}
+.danger.arm{border-color:var(--ng);color:var(--ng);font-weight:700}
+
+/* list */
+.search{width:100%;font:inherit;font-size:16px;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.ql{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.qrow{border-bottom:1px solid var(--line);padding:11px 2px;display:grid;grid-template-columns:10px minmax(0,1fr);gap:12px;align-items:start}
+.qrow .dot{margin-top:8px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.dot.learn{background:var(--acc)}.dot.weak{background:var(--ng)}.dot.seen{background:var(--acc-soft);box-shadow:inset 0 0 0 1.5px var(--acc)}
+.qrow .q{font-size:14px;overflow-wrap:anywhere}
+.qrow .a{font-size:15px;font-weight:700;color:var(--acc)}
+.qrow .m{font-size:11.5px;color:var(--muted)}
+.more{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:11px;font-size:14px}
+.empty{padding:28px 0;text-align:center;color:var(--muted);font-size:14px}
+
+.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+.tabs div{display:flex;width:100%;max-width:560px}
+.tabs button{flex:1;background:none;border:0;padding:12px 0 13px;font-size:13px;color:var(--muted);font-weight:500;border-top:2px solid transparent;margin-top:-1px}
+.tabs button[aria-current="page"]{color:var(--acc);border-top-color:var(--acc);font-weight:700}
+
+/* study */
+.study{position:fixed;inset:0;background:var(--bg);z-index:10;display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+.sin{width:100%;max-width:560px;margin:0 auto;padding-inline:16px;flex:1;display:flex;flex-direction:column;min-height:0}
+.shead{display:flex;align-items:center;gap:12px;padding-block:12px}
+.x{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);font-size:20px;line-height:1;flex:none}
+.prog{flex:1;height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--acc);transition:width .25s}
+.scount{font-size:13px;color:var(--muted);min-width:3.6em;text-align:right}
+.sbody{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-block:6px 14px;min-height:0}
+.sfoot{display:flex;gap:10px;padding-block:10px 14px}
+.btn{flex:1;border:0;border-radius:14px;padding:15px 10px;font-size:16px;font-weight:700;background:var(--acc);color:var(--on-acc)}
+.btn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line);font-weight:500}
+.btn.ok{background:var(--ok);color:var(--surface)}
+.btn.ng{background:var(--ng);color:var(--surface)}
+
+.qcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px 20px;display:flex;flex-direction:column;gap:12px}
+.qtags{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tag{font-size:11px;border:1px solid var(--line);border-radius:6px;padding:1px 7px;color:var(--muted);white-space:nowrap}
+.tag.s{border-color:var(--acc);color:var(--acc);font-weight:700}
+.qtext{font-size:clamp(18px,5.2vw,22px);font-weight:700;line-height:1.5;overflow-wrap:anywhere}
+.ans{border-top:1px dashed var(--line);padding-top:12px;display:flex;flex-direction:column;gap:6px}
+.ans .a{font-size:22px;font-weight:700;color:var(--acc)}
+.expl{font-size:14px;color:var(--muted)}
+.choices{display:flex;flex-direction:column;gap:9px}
+.choice{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:13px 15px;font-size:16px;line-height:1.4;font-weight:500}
+.choice.right{background:var(--ok-soft);border-color:var(--ok)}
+.choice.wrong{background:var(--ng-soft);border-color:var(--ng)}
+.choice:disabled{cursor:default;color:var(--ink)}
+.verdict{font-weight:700;font-size:15px}
+.verdict.ok{color:var(--ok)}.verdict.ng{color:var(--ng)}
+.res{display:flex;flex-direction:column;gap:16px;padding-top:10px}
+.score{font-size:60px;font-weight:700;line-height:1}
+.score small{font-size:22px;color:var(--muted);font-weight:400}
+.missl{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.missl div{display:flex;flex-direction:column;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.missl b{color:var(--acc)}
+
+.install{display:grid;grid-template-columns:52px minmax(0,1fr);gap:12px 14px;align-items:start;background:var(--acc-soft);border-radius:var(--r);padding:14px 16px}
+.install img{width:52px;height:52px;border-radius:12px}
+.install b{display:block;font-size:15px}
+.install p{margin:2px 0 0;font-size:13px;line-height:1.6}
+.install .row{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.install .row button{border-radius:10px;padding:9px 14px;font-size:14px;border:1px solid var(--acc);background:var(--acc);color:var(--on-acc);font-weight:700}
+.install .row .later{margin-left:auto;border:0;background:none;color:var(--muted);font-size:13px;font-weight:400;padding-inline:4px}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:99px;font-size:13px;z-index:20;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <main id="home" class="view"></main>
+  <main id="list" class="view" hidden></main>
+</div>
+<nav class="tabs" aria-label="画面切替"><div>
+  <button id="tab-home" aria-current="page">ホーム</button>
+  <button id="tab-list">問題一覧</button>
+</div></nav>
+<section id="study" class="study" hidden></section>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+/* 問題データ（build.py が q/*.txt から差し込む）
+   各行: 分野|問題|正解|誤答1|誤答2|誤答3|出題年度|解説 */
+const SUBJECTS = /*__DATA__*/[];
+
+const LS_KEY = 'kyotsu-test-v1';
+const DAY = 86400000;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $ = s => document.querySelector(s);
+const now = () => Date.now();
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/* ---------- データ展開 ---------- */
+function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+const Q = [];
+const SUBJ = {};
+for (const s of SUBJECTS) {
+  SUBJ[s.id] = s; s.n = 0;
+  for (const line of s.raw.split('\n')) {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) continue;
+    const f = t.split('|');
+    if (f.length < 8) continue;
+    Q.push({ id: s.id + '-' + hash(f[1]), s: s.id, area: f[0], q: f[1], a: f[2], wrong: [f[3], f[4], f[5]], years: f[6].split(',').map(x => x.trim()).filter(Boolean), ex: f.slice(7).join('|') });
+    s.n++;
+  }
+}
+const YEARS = [...new Set(Q.flatMap(q => q.years))].sort((a, b) => (isNaN(a) ? 9999 : a) - (isNaN(b) ? 9999 : b));
+const GROUPS = [...new Set(SUBJECTS.map(s => s.group))];
+
+/* ---------- 学習記録 ---------- */
+// rec[id] = {c:正解数, w:不正解数, k:連続正解, t:最終解答時刻, last:最後の結果 1/0}
+let S = { rec: {}, subj: SUBJECTS.map(s => s.id), years: YEARS.slice(), count: 10, weak: false };
+try { const raw = localStorage.getItem(LS_KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch (e) {}
+S.subj = S.subj.filter(id => SUBJ[id]); S.years = S.years.filter(y => YEARS.includes(y));
+const save = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) {} };
+
+function status(q) {
+  const r = S.rec[q.id];
+  if (!r) return 'new';
+  if (r.last === 0) return 'weak';
+  if (r.k >= 2) return 'learn';
+  return 'seen';
+}
+function due(q) { const r = S.rec[q.id]; return r && r.last === 1 && now() - r.t > Math.pow(2, r.k) * DAY; }
+function record(q, ok) {
+  const r = S.rec[q.id] || { c: 0, w: 0, k: 0, t: 0, last: 0 };
+  if (ok) { r.c++; r.k++; } else { r.w++; r.k = 0; }
+  r.last = ok ? 1 : 0; r.t = now();
+  S.rec[q.id] = r; save();
+}
+
+/* ---------- 出題範囲 ---------- */
+function inScope(q) { return S.subj.includes(q.s) && q.years.some(y => S.years.includes(y)); }
+function scopeList() { return Q.filter(q => inScope(q) && (!S.weak || status(q) === 'weak')); }
+function pick(n) {
+  const pool = scopeList();
+  // 苦手 → 復習時期 → 未出題 → その他 の順に優先
+  const rank = q => { const st = status(q); return st === 'weak' ? 0 : due(q) ? 1 : st === 'new' ? 2 : 3; };
+  const by = [[], [], [], []];
+  for (const q of shuffle(pool)) by[rank(q)].push(q);
+  return shuffle(by.flat().slice(0, n === 0 ? pool.length : n));
+}
+
+/* ---------- ホーム ---------- */
+function counts(list) {
+  const c = { new: 0, seen: 0, learn: 0, weak: 0 };
+  for (const q of list) c[status(q)]++;
+  return c;
+}
+let armReset = false;
+function renderHome() {
+  const all = counts(Q);
+  const scope = scopeList();
+  const done = Q.length - all.new;
+  const pct = x => (x / Q.length * 100).toFixed(2) + '%';
+  let later = null; try { later = localStorage.getItem(LS_KEY + '-install-later'); } catch (e) {}
+  const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const showInstall = !standalone && !(later && now() - Number(later) < 14 * DAY);
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+
+  $('#home').innerHTML = `
+  <header><div class="eyebrow">大学入学共通テスト 2022–2026 本試験から</div><h1>共通テスト 一問一答</h1></header>
+  ${showInstall ? `<div class="install"><img src="icons/icon-192.png" alt=""><div><b>ホーム画面に追加しよう</b>
+    <p>${ios ? 'Safari の共有ボタン（□に↑）→「ホーム画面に追加」で、アプリのように使えます。' : 'アプリのように起動でき、電波がなくても学習できます。'}</p></div>
+    <div class="row">${deferredPrompt ? '<button id="btn-install">ホーム画面に追加</button>' : ''}<button class="later" id="btn-later">あとで</button></div></div>` : ''}
+  <section class="summary">
+    <div class="sumrow"><div class="big num">${all.learn}<small> / ${Q.length} 問 定着</small></div></div>
+    <div class="meta"><span>解いた <b class="num">${done}</b></span><span>苦手 <b class="num">${all.weak}</b></span><span>未出題 <b class="num">${all.new}</b></span></div>
+    <div class="bar"><i class="l" style="width:${pct(all.learn)}"></i><i class="s" style="width:${pct(all.seen)}"></i><i class="w" style="width:${pct(all.weak)}"></i></div>
+    <div class="legend"><span style="--c:var(--acc)">2回連続正解</span><span style="--c:var(--acc-soft)">正解1回</span><span style="--c:var(--ng)">苦手（直近で不正解）</span></div>
+  </section>
+
+  <section class="panel" aria-label="出題範囲">
+    <div class="field"><div class="lab">科目<button data-all="subj">${S.subj.length === SUBJECTS.length ? 'すべて外す' : 'すべて選ぶ'}</button></div>
+      ${GROUPS.map(g => `<div class="chips">${SUBJECTS.filter(s => s.group === g).map(s => `<button class="chip" data-subj="${s.id}" aria-pressed="${S.subj.includes(s.id)}">${esc(s.name)}</button>`).join('')}</div>`).join('')}
+    </div>
+    <div class="field"><div class="lab">出題年度（本試験）<button data-all="years">${S.years.length === YEARS.length ? 'すべて外す' : 'すべて選ぶ'}</button></div>
+      <div class="chips">${YEARS.map(y => `<button class="chip" data-year="${esc(y)}" aria-pressed="${S.years.includes(y)}">${esc(y)}${isNaN(y) ? '' : '年'}</button>`).join('')}</div>
+    </div>
+    <div class="field"><div class="lab">1回の問題数</div>
+      <div class="chips">${[10, 20, 30, 0].map(n => `<button class="chip" data-count="${n}" aria-pressed="${S.count === n}">${n ? n + '問' : '全部'}</button>`).join('')}
+      <button class="chip" id="btn-weak" aria-pressed="${S.weak}">苦手だけ</button></div>
+    </div>
+    <div class="scopecount">出題範囲 <b class="num">${scope.length}</b> 問</div>
+  </section>
+
+  <section class="modes">
+    <button class="mode" data-mode="choice" ${scope.length ? '' : 'disabled'}><span class="ic">4</span><div><b>4択テスト</b><span>選択肢から正解を選ぶ</span></div><span class="go">›</span></button>
+    <button class="mode" data-mode="card" ${scope.length ? '' : 'disabled'}><span class="ic">?</span><div><b>一問一答</b><span>答えを思い浮かべてからめくる</span></div><span class="go">›</span></button>
+  </section>
+
+  <section>
+    <h2>科目ごとの定着</h2>
+    <div class="subrows">${SUBJECTS.map(s => {
+      const list = Q.filter(q => q.s === s.id), c = counts(list), p = x => (x / list.length * 100).toFixed(1) + '%';
+      return `<div class="subrow"><span>${esc(s.name)}</span><div class="bar"><i class="l" style="width:${p(c.learn)}"></i><i class="s" style="width:${p(c.seen)}"></i><i class="w" style="width:${p(c.weak)}"></i></div><span class="num">${c.learn}/${list.length}</span></div>`;
+    }).join('')}</div>
+  </section>
+
+  <section class="field">
+    <p class="note">学習記録はこの端末のブラウザ内だけに保存されます。問題は過去の出題事項をもとに作ったオリジナルです。</p>
+    <button class="danger${armReset ? ' arm' : ''}" id="btn-reset">${armReset ? 'もう一度押すと記録をすべて消します' : '学習記録をリセット'}</button>
+  </section>`;
+}
+
+$('#home').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.id !== 'btn-reset') armReset = false;
+  if (b.dataset.subj) { const id = b.dataset.subj; S.subj = S.subj.includes(id) ? S.subj.filter(x => x !== id) : [...S.subj, id]; }
+  else if (b.dataset.year) { const y = b.dataset.year; S.years = S.years.includes(y) ? S.years.filter(x => x !== y) : [...S.years, y]; }
+  else if (b.dataset.all === 'subj') S.subj = S.subj.length === SUBJECTS.length ? [] : SUBJECTS.map(s => s.id);
+  else if (b.dataset.all === 'years') S.years = S.years.length === YEARS.length ? [] : YEARS.slice();
+  else if (b.dataset.count) S.count = Number(b.dataset.count);
+  else if (b.id === 'btn-weak') S.weak = !S.weak;
+  else if (b.dataset.mode) { startStudy(b.dataset.mode); return; }
+  else if (b.id === 'btn-reset') { if (armReset) { S.rec = {}; armReset = false; toast('記録を消しました'); } else armReset = true; }
+  else if (b.id === 'btn-install') { deferredPrompt.prompt(); deferredPrompt.userChoice.finally(() => { deferredPrompt = null; renderHome(); }); return; }
+  else if (b.id === 'btn-later') { try { localStorage.setItem(LS_KEY + '-install-later', String(now())); } catch (er) {} }
+  save(); renderHome();
+});
+
+/* ---------- 学習 ---------- */
+let R = null; // {mode, list, i, ok, miss, answered, shown, opts}
+function startStudy(mode) {
+  const list = pick(S.count);
+  if (!list.length) { toast(S.weak ? '苦手な問題はありません' : '出題範囲に問題がありません'); return; }
+  R = { mode, list, i: 0, ok: 0, miss: [], answered: false, shown: false };
+  $('#study').hidden = false; document.body.style.overflow = 'hidden';
+  renderStudy();
+}
+function closeStudy() { R = null; $('#study').hidden = true; document.body.style.overflow = ''; renderHome(); renderList(); }
+
+function tags(q) {
+  return `<div class="qtags"><span class="tag s">${esc(SUBJ[q.s].name)}</span><span class="tag">${esc(q.area)}</span><span class="tag">${q.years.map(esc).join('・')}</span></div>`;
+}
+function renderStudy() {
+  const el = $('#study');
+  const n = R.list.length;
+  if (R.i >= n) {
+    const pct = Math.round(R.ok / n * 100);
+    el.innerHTML = `<div class="sin"><div class="shead"><button class="x" data-act="close" aria-label="閉じる">×</button><div style="flex:1"></div></div>
+    <div class="sbody"><div class="res">
+      <div class="eyebrow">結果</div>
+      <div class="score num">${R.ok}<small> / ${n}　${pct}%</small></div>
+      ${R.miss.length ? `<h2>まちがえた問題</h2><div class="missl">${R.miss.map(q => `<div><span>${esc(q.q)}</span><b>${esc(q.a)}</b></div>`).join('')}</div>` : '<p>全問正解です。</p>'}
+    </div></div>
+    <div class="sfoot"><button class="btn ghost" data-act="close">ホームへ</button>${R.miss.length ? '<button class="btn" data-act="retry">まちがいを解き直す</button>' : '<button class="btn" data-act="again">続ける</button>'}</div></div>`;
+    return;
+  }
+  const q = R.list[R.i];
+  const head = `<div class="shead"><button class="x" data-act="close" aria-label="閉じる">×</button><div class="prog"><i style="width:${R.i / n * 100}%"></i></div><span class="scount num">${R.i + 1}/${n}</span></div>`;
+  const answer = `<div class="ans"><div class="a">${esc(q.a)}</div>${q.ex ? `<div class="expl">${esc(q.ex)}</div>` : ''}</div>`;
+  let body, foot;
+  if (R.mode === 'choice') {
+    if (!R.opts) R.opts = shuffle([q.a, ...q.wrong]);
+    body = `<div class="qcard">${tags(q)}<div class="qtext">${esc(q.q)}</div>${R.answered ? `<div class="verdict ${R.lastOk ? 'ok' : 'ng'}">${R.lastOk ? '○ 正解' : '× 不正解'}</div>` + answer : ''}</div>
+      <div class="choices">${R.opts.map((o, k) => {
+        const cls = R.answered ? (o === q.a ? ' right' : o === R.picked ? ' wrong' : '') : '';
+        return `<button class="choice${cls}" data-opt="${k}" ${R.answered ? 'disabled' : ''}>${esc(o)}</button>`;
+      }).join('')}</div>`;
+    foot = R.answered ? '<button class="btn" data-act="next">次へ</button>' : '<button class="btn ghost" data-act="skip">わからない</button>';
+  } else {
+    // 「次のうち〜はどれ？」は選択肢がないと答えられないので、候補を並べて見せる
+    if (!R.opts && q.q.startsWith('次の')) R.opts = shuffle([q.a, ...q.wrong]);
+    const cand = R.opts ? `<div class="expl">${R.opts.map(esc).join('　／　')}</div>` : '';
+    body = `<div class="qcard">${tags(q)}<div class="qtext">${esc(q.q)}</div>${cand}${R.shown ? answer : ''}</div>`;
+    foot = R.shown ? '<button class="btn ng" data-act="ng">まだ</button><button class="btn ok" data-act="ok">わかった</button>' : '<button class="btn" data-act="show">答えを見る</button>';
+  }
+  el.innerHTML = `<div class="sin">${head}<div class="sbody">${body}</div><div class="sfoot">${foot}</div></div>`;
+}
+function answer(ok) {
+  const q = R.list[R.i];
+  record(q, ok);
+  if (ok) R.ok++; else R.miss.push(q);
+}
+function next() { R.i++; R.answered = false; R.shown = false; R.opts = null; R.picked = null; renderStudy(); $('#study .sbody') && ($('#study .sbody').scrollTop = 0); }
+
+$('#study').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || !R) return;
+  const act = b.dataset.act;
+  if (act === 'close') return closeStudy();
+  if (b.dataset.opt != null && !R.answered) {
+    const q = R.list[R.i]; R.picked = R.opts[Number(b.dataset.opt)];
+    R.lastOk = R.picked === q.a; R.answered = true; answer(R.lastOk); renderStudy(); return;
+  }
+  if (act === 'skip') { R.picked = null; R.lastOk = false; R.answered = true; answer(false); renderStudy(); return; }
+  if (act === 'next') return next();
+  if (act === 'show') { R.shown = true; renderStudy(); return; }
+  if (act === 'ok' || act === 'ng') { answer(act === 'ok'); return next(); }
+  if (act === 'retry') { const m = R.mode, l = shuffle(R.miss); R = { mode: m, list: l, i: 0, ok: 0, miss: [], answered: false, shown: false }; renderStudy(); return; }
+  if (act === 'again') { const m = R.mode; R = null; startStudy(m); return; }
+});
+
+/* ---------- 問題一覧 ---------- */
+let L = { subj: SUBJECTS[0] ? SUBJECTS[0].id : '', word: '', st: 'all', limit: 60 };
+function renderList() {
+  const w = L.word.trim();
+  const list = Q.filter(q => q.s === L.subj && (L.st === 'all' || status(q) === L.st) && (!w || (q.q + q.a + q.area + q.ex).includes(w)));
+  const stl = { all: 'すべて', weak: '苦手', learn: '定着', new: '未出題' };
+  $('#list').innerHTML = `
+  <header><div class="eyebrow">問題と答えを確認</div><h1>問題一覧</h1></header>
+  <div class="chips">${SUBJECTS.map(s => `<button class="chip" data-ls="${s.id}" aria-pressed="${L.subj === s.id}">${esc(s.name)}</button>`).join('')}</div>
+  <input class="search" type="search" id="lw" placeholder="ことばで検索（例：鎌倉、酵素）" value="${esc(L.word)}">
+  <div class="chips">${Object.keys(stl).map(k => `<button class="chip" data-lst="${k}" aria-pressed="${L.st === k}">${stl[k]}</button>`).join('')}</div>
+  <div class="scopecount"><b class="num">${list.length}</b> 問</div>
+  ${list.length ? `<div class="ql">${list.slice(0, L.limit).map(q => `<div class="qrow"><i class="dot ${status(q)}"></i><div><div class="m">${esc(q.area)}・${q.years.map(esc).join('・')}</div><div class="q">${esc(q.q)}</div><div class="a">${esc(q.a)}</div>${q.ex ? `<div class="m">${esc(q.ex)}</div>` : ''}</div></div>`).join('')}</div>
+  ${list.length > L.limit ? `<button class="more" data-more>さらに表示（残り ${list.length - L.limit} 問）</button>` : ''}` : '<div class="empty">該当する問題がありません</div>'}`;
+}
+$('#list').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.ls) { L.subj = b.dataset.ls; L.limit = 60; }
+  else if (b.dataset.lst) { L.st = b.dataset.lst; L.limit = 60; }
+  else if (b.dataset.more != null) L.limit += 60;
+  renderList();
+});
+$('#list').addEventListener('input', e => {
+  if (e.target.id !== 'lw') return;
+  L.word = e.target.value; L.limit = 60;
+  const pos = e.target.selectionStart; renderList();
+  const i = $('#lw'); i.focus(); try { i.setSelectionRange(pos, pos); } catch (er) {}
+});
+
+/* ---------- タブ・その他 ---------- */
+function tab(name) {
+  $('#home').hidden = name !== 'home'; $('#list').hidden = name !== 'list';
+  $('#tab-home').setAttribute('aria-current', name === 'home' ? 'page' : 'false');
+  $('#tab-list').setAttribute('aria-current', name === 'list' ? 'page' : 'false');
+  scrollTo(0, 0);
+}
+$('#tab-home').onclick = () => tab('home');
+$('#tab-list').onclick = () => tab('list');
+let toastT;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2200); }
+let deferredPrompt = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; renderHome(); });
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+renderHome(); renderList();
+</script>
+</body>
+</html>
